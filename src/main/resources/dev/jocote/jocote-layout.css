@@ -1,0 +1,13 @@
+/* Geometry and branding shared by custom and native JavaFX themes. */
+.brand-mark { -fx-background-color: #bd5939; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 23px; -fx-padding: 4 13; -fx-background-radius: 11; }
+.brand-title { -fx-font-size: 25px; -fx-font-weight: bold; }
+.brand-subtitle { -fx-font-size: 10px; }
+.panel-title { -fx-font-size: 16px; -fx-font-weight: bold; }
+.muted { -fx-font-size: 11px; }
+.code-area { -fx-font-family: "monospace"; -fx-font-size: 12px; }
+.profile-avatar { -fx-background-color: #bd5939; -fx-text-fill: white; -fx-alignment: center; -fx-background-radius: 100; -fx-min-width: 32; -fx-pref-width: 32; -fx-max-width: 32; -fx-min-height: 32; -fx-pref-height: 32; -fx-max-height: 32; -fx-font-size: 12px; -fx-font-weight: bold; }
+.profile-button { -fx-padding: 4 6; -fx-background-radius: 24; }
+.button.theme-button { -fx-font-size: 21px; -fx-padding: 3 10; -fx-min-width: 40; -fx-min-height: 40; }
+.theme-icon-outline { -fx-fill: transparent; -fx-stroke: -fx-text-base-color; -fx-stroke-width: 1.5; }
+.theme-icon-half { -fx-fill: -fx-text-base-color; }
+.validation-error { -fx-text-fill: #b42318; }

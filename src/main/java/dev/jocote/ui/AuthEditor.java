@@ -21,6 +21,7 @@ final class AuthEditor extends VBox {
 
     AuthEditor(AuthConfig config, Runnable onChange) {
         setPadding(new Insets(16)); setSpacing(12);
+        getStyleClass().add("auth-editor");
         type.getItems().setAll(AuthConfig.Type.values());
         type.setConverter(new StringConverter<>() {
             @Override public String toString(AuthConfig.Type value) {
@@ -33,6 +34,7 @@ final class AuthEditor extends VBox {
         key.setPromptText("X-API-Key"); secret.setPromptText("Credencial");
         placement.getItems().setAll(AuthConfig.Placement.values()); placement.setValue(config.placement());
         fields.setHgap(16); fields.setVgap(12);
+        fields.getStyleClass().add("settings-grid");
         var help = new Label("La autorización configurada reemplaza el encabezado del mismo nombre.\nLas credenciales guardadas forman parte del archivo local de la colección.");
         help.setWrapText(true); help.getStyleClass().add("muted");
         getChildren().addAll(new Label("TIPO DE AUTORIZACIÓN"), type, fields, help);
