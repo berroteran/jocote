@@ -120,6 +120,7 @@ class JavaFxSmokeTest {
             verifyCurlImport(view[0], "http://127.0.0.1:" + server.getAddress().getPort() + "/curl", importedCalls);
             verifyThemesAndProfile(view[0], preferences, stage[0]);
             verifyDensity(view[0], preferences, stage[0]);
+            ResponseViewerChecks.verify();
             assertEquals(preferences.current(), new PreferencesRepository(settingsFile).load());
             if (Boolean.getBoolean("jocote.githubTest")) verifyGitHubDemo(view[0], service);
         } finally {

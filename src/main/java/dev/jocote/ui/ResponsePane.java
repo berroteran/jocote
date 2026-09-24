@@ -1,7 +1,8 @@
 package dev.jocote.ui;
 
 import dev.jocote.model.ResponseData;
-import dev.jocote.service.JsonFormatter;
+import dev.jocote.model.ResponsePreview;
+import dev.jocote.service.ResponseInspector;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -11,6 +12,7 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -25,14 +27,17 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
 
 final class ResponsePane extends VBox {
-    private static final int PREVIEW_LIMIT = 300_000;
+    private static final int PREVIEW_LIMIT = ResponseInspector.TEXT_LIMIT;
     private final Label status = new Label("Sin ejecutar");
     private final Label timing = new Label();
     private final TextArea body = UiSupport.codeArea(false);
     private final TextArea headers = UiSupport.codeArea(false);
     private final StackPane content = new StackPane();
     private final TabPane tabs = new TabPane();
-    private final CheckBox pretty = new CheckBox("Formatear JSON");
+    private final CheckBox pretty = new CheckBox("Formatear JSON/XML");
+    private final TextSearchBar search = new TextSearchBar(body, "response");
+    private final ResponsePreviewPane preview = new ResponsePreviewPane(this::previewReady);
+    private String formattedText;
     private final Button save;
     private final Button copy;
     private ResponseData response;
@@ -47,20 +52,23 @@ final class ResponsePane extends VBox {
         Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
         var top = new HBox(12, heading, spacer, status, timing); top.setAlignment(Pos.CENTER_LEFT);
         top.getStyleClass().add("control-row");
-        pretty.setSelected(true); pretty.setOnAction(event -> renderBody());
+        pretty.setId("response-pretty"); pretty.setSelected(true); pretty.setOnAction(event -> renderBody());
         save = UiSupport.button("Guardar respuesta", "Guardar los bytes originales de la respuesta", this::saveResponse);
         copy = UiSupport.button("Copiar", "Copiar el contenido mostrado", () -> UiSupport.copy(body.getText()));
         save.setDisable(true); copy.setDisable(true);
-        var actions = new HBox(12, pretty, copy, save); actions.getStyleClass().add("control-row");
-        VBox bodyBox = new VBox(8, actions, body); VBox.setVgrow(body, Priority.ALWAYS);
+        var actions = new FlowPane(8, 4, pretty, copy, save);
+        VBox bodyBox = new VBox(8, actions, search, body); VBox.setVgrow(body, Priority.ALWAYS);
         bodyBox.getStyleClass().add("content-stack");
-        tabs.getTabs().addAll(new Tab("Body", bodyBox), new Tab("Encabezados", headers));
+        tabs.setId("response-tabs");
+        tabs.getTabs().addAll(new Tab("Body", bodyBox), new Tab("Vista", preview),
+                new Tab("Consulta", preview.queryPane()), new Tab("Encabezados", headers));
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         showEmpty("Tu próxima respuesta empieza aquí", "Configura una URL y pulsa Enviar · Ctrl/⌘ + Enter");
         getChildren().addAll(top, content); VBox.setVgrow(content, Priority.ALWAYS);
     }
 
     void loading() {
+        preview.clear(); formattedText = null;
         response = null; save.setDisable(true); copy.setDisable(true);
         status.setText("Enviando…"); status.setStyle(""); timing.setText("");
         showEmpty("Esperando al servidor…", "Puedes cancelar la petición en cualquier momento.");
@@ -68,6 +76,7 @@ final class ResponsePane extends VBox {
 
     void show(ResponseData value) {
         response = value;
+        formattedText = null; pretty.setDisable(true);
         status.setText(value.statusCode() + " " + statusName(value.statusCode()));
         status.setStyle(value.statusCode() < 400 ? "-fx-text-fill: #267454; -fx-background-color: #e3f4eb;" : "-fx-text-fill: #b23c3c; -fx-background-color: #fde8e8;");
         timing.setText(value.elapsedMillis() + " ms   ·   " + String.format(Locale.ROOT, "%.1f KiB", value.body().length / 1024.0));
@@ -75,10 +84,11 @@ final class ResponsePane extends VBox {
                 .sorted(java.util.Map.Entry.comparingByKey()).map(e -> e.getKey() + ": " + String.join(", ", e.getValue()))
                 .collect(java.util.stream.Collectors.joining("\n")));
         save.setDisable(false); copy.setDisable(false);
-        renderBody(); content.getChildren().setAll(tabs);
+        renderBody(); content.getChildren().setAll(tabs); preview.show(value);
     }
 
     void showError(Throwable error) {
+        preview.clear(); formattedText = null;
         while ((error instanceof CompletionException || error instanceof java.util.concurrent.ExecutionException) && error.getCause() != null) error = error.getCause();
         boolean cancelled = error instanceof CancellationException;
         status.setText(cancelled ? "Cancelada" : "Error");
@@ -95,9 +105,17 @@ final class ResponsePane extends VBox {
         String text = response.text();
         boolean truncated = text.length() > PREVIEW_LIMIT;
         if (truncated) text = text.substring(0, PREVIEW_LIMIT);
-        else if (pretty.isSelected()) text = JsonFormatter.format(text);
+        else if (pretty.isSelected() && formattedText != null) text = formattedText;
         body.setText(text + (truncated ? "\n\n[Vista limitada a 300 000 caracteres. Guarda la respuesta para obtener el contenido completo.]" : ""));
     }
+
+    private void previewReady(ResponsePreview result) {
+        boolean structured = result.format() == ResponsePreview.Format.JSON || result.format() == ResponsePreview.Format.XML;
+        formattedText = structured ? result.formattedText() : null;
+        pretty.setDisable(!structured); renderBody();
+    }
+
+    void dispose() { preview.dispose(); search.dispose(); }
 
     private void showEmpty(String title, String subtitle) {
         Label heading = new Label(title); heading.getStyleClass().add("empty-title");

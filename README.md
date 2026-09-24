@@ -282,7 +282,7 @@ Los valores de transporte no especificados siguen siendo los de Jocote: timeout 
 - Autorización: ninguna, Bearer, Basic y API key en encabezado o query.
 - Body: JSON, texto, XML y `application/x-www-form-urlencoded`. Content-Type automático, reemplazable por un encabezado explícito.
 - Envío asíncrono, cancelación y timeout por petición de 1 a 600 segundos.
-- Respuesta: código HTTP, tiempo, tamaño, encabezados, texto y JSON formateado; copia y guardado de los bytes originales.
+- Respuesta: código HTTP, tiempo, tamaño, encabezados, texto, búsqueda y ajuste de líneas; JSON/XML formateado, árbol JSON, código coloreado, imágenes, HTML estático y consultas JSONPath/XPath. Guardado de los bytes originales.
 - Panel derecho cURL colapsable, con generación en vivo para Bash/Zsh y PowerShell 7.3+.
 - Guardado local de colecciones y aviso al cerrar pestañas con cambios pendientes.
 - Atajos adaptados: Ctrl en Windows/Linux y ⌘ en macOS.
@@ -295,6 +295,39 @@ Los valores de transporte no especificados siguen siendo los de Jocote: timeout 
 | Cerrar pestaña | Ctrl/⌘ + W |
 
 Doble clic sobre una celda para editar; Enter confirma el valor. Los parámetros del editor se agregan a los existentes en la URL. El cURL representa la pestaña activa, no necesariamente la última petición ejecutada.
+
+### Explorar una respuesta (JOC-047)
+
+Después de **Enviar**, el panel de respuesta ofrece cuatro pestañas:
+
+| Pestaña | Uso |
+| --- | --- |
+| **Body** | Texto seleccionable, búsqueda literal con distinción de mayúsculas, botones anterior/siguiente y ajuste de líneas. Desmarca **Formatear JSON/XML** para ver el texto original. **Copiar** copia lo mostrado; **Guardar respuesta** conserva los bytes originales recibidos. |
+| **Vista** | JSON como árbol colapsable o código con colores y números de línea; XML como código coloreado; imágenes PNG/JPEG/GIF/BMP; HTML como texto con títulos, énfasis y listas. El contenido determina la vista disponible. |
+| **Consulta** | JSONPath sobre JSON o XPath 1.0 sobre XML, con resultados copiables, búsqueda y mensajes de error. Las consultas son locales y no envían peticiones. |
+| **Encabezados** | Protocolo y encabezados HTTP de la respuesta. |
+
+En JSON, usa **Vista → Árbol / Código** para alternar. Seleccionar una hoja del árbol habilita **Copiar valor**. El resaltado es de lectura: el editor del body del request mantiene su botón de formato, todavía sin resaltado de sintaxis. La selección libre de texto y la búsqueda están disponibles en **Body** y en los resultados de **Consulta**. La vista coloreada limita cada línea a 8 192 caracteres; Body conserva la vista de texto hasta su límite general.
+
+Ejemplos de consultas:
+
+| Formato | Consulta | Resultado |
+| --- | --- | --- |
+| JSONPath | `$.items[*].name` | Valores de `name` en los elementos del arreglo. |
+| JSONPath | `$['clave.con.puntos']` | Propiedad cuyo nombre contiene puntos. |
+| JSONPath | `$.items[-1]` | Último elemento del arreglo. |
+| JSONPath | `$..id` | Propiedades `id` en cualquier nivel. |
+| XPath | `//item/@id` | Valores del atributo `id`. |
+| XPath | `count(//item)` | Cantidad de elementos `item`. |
+| XPath | `//*[local-name()='item']` | Elementos con ese nombre local, independientemente de su namespace. |
+
+**Alcance de JSONPath:** raíz `$`, propiedades, claves entre comillas, índices positivos/negativos, comodines y descendientes recursivos. No se admiten filtros, slices, uniones ni funciones; se informa el límite sin devolver una interpretación parcial. No se promete conformidad completa con [RFC 9535](https://www.rfc-editor.org/rfc/rfc9535.html). XPath admite los prefijos declarados en la raíz del documento; para namespaces predeterminados o declarados solo en elementos interiores, usa `local-name()` y `namespace-uri()`.
+
+**Límites del visor:** texto de hasta 300 000 caracteres y salida formateada/consultada del mismo tamaño máximo; hasta 128 niveles y 10 000 nodos al construir vistas estructuradas. Las consultas admiten hasta 1 024 caracteres y 1 000 resultados; JSONPath limita además a 64 selectores y 200 000 visitas. La búsqueda textual navega las primeras 10 001 coincidencias e indica `10 000+` cuando alcanza ese límite. Si una vista no puede generarse, se mantiene el texto original y el guardado del archivo. Un JSON con claves duplicadas se muestra como texto para evitar ocultar valores.
+
+Las imágenes se validan antes de decodificar: máximo 8 192 píxeles por lado y 16 millones de píxeles en total. Se muestra una vista reducida de hasta 1 600 × 1 600 y solo el primer fotograma de GIF. SVG se trata como XML, sin renderizar recursos activos.
+
+La vista HTML es una representación estática con controles JavaFX, sin navegador embebido: no interpreta JavaScript ni CSS, no activa enlaces/formularios y no descarga imágenes, iframes o recursos externos. No pretende reproducir el diseño completo de una página web. El parser XML bloquea DTD y entidades externas; no ejecuta XInclude ni hojas de estilo. El análisis, las consultas y la decodificación de imágenes se ejecutan fuera del hilo gráfico; cambiar de respuesta o cerrar su pestaña cancela el trabajo anterior y evita que reemplace la vista nueva.
 
 ### Temas y perfil local
 
@@ -322,7 +355,7 @@ En PowerShell, encierra `"-Djocote.home=C:\ruta\workspace"` entre comillas si co
 
 El cliente verifica certificados TLS y nombres de host. Los redirects se muestran como respuestas 3xx, sin seguirlos automáticamente. No se conserva una sesión de cookies automáticamente. Los encabezados `Host`, `Content-Length`, `Connection`, `Expect` y `Upgrade` están administrados/restringidos por el cliente HTTP de Java.
 
-Las respuestas tienen un máximo de 10 MiB; la vista muestra hasta 300 000 caracteres. El guardado conserva todos los bytes recibidos dentro del límite. No hay vista específica de imágenes ni descompresión manual de respuestas comprimidas. La aplicación no solicita compresión por defecto.
+Las respuestas tienen un máximo de 10 MiB; la vista muestra hasta 300 000 caracteres. El guardado conserva todos los bytes recibidos dentro del límite. La previsualización de imágenes tiene los límites descritos en **Explorar una respuesta**. No hay descompresión manual de respuestas HTTP comprimidas. La aplicación no solicita compresión por defecto.
 
 ## Organización
 
@@ -343,7 +376,7 @@ src/test/java/                 Pruebas de lógica, integración HTTP y UI
 
 La UI no construye encabezados ni codifica parámetros. `RequestPreparer` produce una petición normalizada que comparten el servicio HTTP y el generador cURL. Los servicios y modelos no dependen de JavaFX. El acceso a disco se encapsula en el repositorio; el servicio de workspace publica los cambios en memoria después de guardarlos correctamente.
 
-Dependencias de producción: JavaFX Controls y Jackson. HTTP utiliza `java.net.http.HttpClient`. No hay Spring ni contenedor de inyección: las dependencias se conectan explícitamente al iniciar la aplicación.
+Dependencias de producción: JavaFX Controls y Jackson. HTTP utiliza `java.net.http.HttpClient`. El visor reutiliza `java.xml` y `java.desktop` del JDK para XML/XPath, análisis de HTML e imágenes; la interfaz sigue siendo JavaFX y no agrega un motor web ni dependencias Maven. No hay Spring ni contenedor de inyección: las dependencias se conectan explícitamente al iniciar la aplicación.
 
 ## Validación
 
@@ -366,6 +399,8 @@ xvfb-run -a mvn -Djocote.uiTest=true -Dtest=JavaFxSmokeTest test
 ```
 
 Esta prueba abre JavaFX, verifica controles, ejecuta una petición contra un servidor local y guarda una captura en `target/jocote-preview.png`. También prueba cancelar la importación, corregir un comando inválido, importar cURL en una pestaña sin enviar automáticamente y mostrar la respuesta después de pulsar Enviar. Recorre los cuatro temas, comprueba el orden de los botones y el ancho mínimo de ventana, edita/cancela el perfil y genera capturas `target/jocote-theme-*.png` y `target/jocote-profile-*.png`. Los tests se ejecutan en classpath; producción se ejecuta como módulo con Maven o el runtime generado.
+
+La prueba gráfica también recorre el visor de respuestas: árbol y colores JSON en los cuatro temas, consultas JSONPath/XPath, búsqueda, ajuste de líneas, HTML estático, imagen PNG y sustitución de una respuesta mientras se analiza la anterior. Genera capturas `target/jocote-response-*.png`. Las pruebas del servicio verifican límites, rechazo de JSON/XML inválido, bloqueo de entidades externas y ausencia de peticiones al analizar recursos HTML/XML.
 
 Para verificar además las cuatro peticiones reales de la demo desde JavaFX (requiere internet y consume cuatro peticiones públicas a GitHub):
 

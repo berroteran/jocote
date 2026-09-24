@@ -108,7 +108,7 @@ public final class RequestEditor extends VBox {
     }
 
     public void cancel() { if (pending != null) pending.cancel(true); }
-    public void dispose() { disposed = true; cancel(); }
+    public void dispose() { disposed = true; cancel(); response.dispose(); }
     public boolean isDirty() { return dirty.get(); }
     public void markDirty() { changed(); }
     public ReadOnlyBooleanProperty dirtyProperty() { return dirty; }
