@@ -2,6 +2,8 @@ module dev.jocote {
     requires javafx.controls;
     requires java.net.http;
     requires java.logging;
+    requires java.xml;
+    requires java.desktop;
     requires com.fasterxml.jackson.databind;
 
     exports dev.jocote to javafx.graphics;

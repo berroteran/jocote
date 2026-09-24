@@ -1,4 +1,30 @@
 /* Geometry and branding shared by custom and native JavaFX themes. */
+.syntax-line { -fx-font-family: "monospace"; -fx-font-size: 12px; }
+.response-tree .tree-cell:selected { -fx-background-color: #dce6f0; }
+.theme-dark .response-tree .tree-cell:selected { -fx-background-color: #2a384b; }
+.syntax-view .list-cell { -fx-padding: 0 4; }
+.syntax-view .list-cell:selected { -fx-background-color: -fx-control-inner-background; }
+.syntax-plain, .syntax-object, .syntax-array, .html-text { -fx-fill: -fx-text-background-color; }
+.syntax-key { -fx-fill: #265ca0; }
+.syntax-string { -fx-fill: #267344; }
+.syntax-number { -fx-fill: #8f451b; }
+.syntax-boolean, .syntax-null, .syntax-literal { -fx-fill: #8145a6; }
+.syntax-line-number { -fx-fill: #687380; }
+.theme-dark .syntax-key { -fx-fill: #91c5ff; }
+.theme-dark .syntax-string { -fx-fill: #91d8a2; }
+.theme-dark .syntax-number { -fx-fill: #ffc187; }
+.theme-dark .syntax-boolean, .theme-dark .syntax-null, .theme-dark .syntax-literal { -fx-fill: #d4adff; }
+.theme-dark .syntax-line-number { -fx-fill: #a6b2c1; }
+.theme-dark .syntax-plain, .theme-dark .syntax-object, .theme-dark .syntax-array, .theme-dark .html-text { -fx-fill: #e6edf5; }
+.theme-dark .syntax-view, .theme-dark .syntax-view .list-cell { -fx-background-color: #1b2028; }
+.html-preview { -fx-padding: 12; -fx-line-spacing: 3; }
+.html-bold { -fx-font-weight: bold; }
+.html-italic { -fx-font-style: italic; }
+.html-code { -fx-font-family: "monospace"; }
+.html-heading-1 { -fx-font-size: 24px; }
+.html-heading-2 { -fx-font-size: 21px; }
+.html-heading-3 { -fx-font-size: 18px; }
+.html-heading-4, .html-heading-5, .html-heading-6 { -fx-font-size: 15px; }
 .brand-mark { -fx-background-color: #bd5939; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 23px; -fx-padding: 4 13; -fx-background-radius: 11; }
 .brand-title { -fx-font-size: 25px; -fx-font-weight: bold; }
 .brand-subtitle { -fx-font-size: 10px; }
