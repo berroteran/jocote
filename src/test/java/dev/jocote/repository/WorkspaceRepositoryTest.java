@@ -54,4 +54,31 @@ class WorkspaceRepositoryTest {
         Workspace before = service.workspace();
         assertThrows(IOException.class, () -> service.addCollection("Will fail")); assertEquals(before, service.workspace());
     }
+
+    @Test void githubDemoIsSavedOnceWithoutReplacingExistingCollectionsOrEdits() throws Exception {
+        var repository = new WorkspaceRepository(directory.resolve("workspace.json"));
+        var service = new WorkspaceService(repository);
+        var original = service.workspace().collections().getFirst();
+        var personal = RequestDefinition.blank().withName("Mi petición");
+        service.saveRequest(original.id(), personal);
+
+        var demo = service.addGitHubDemo();
+        assertEquals(4, demo.requests().size());
+        for (var request : demo.requests()) {
+            var prepared = new dev.jocote.service.RequestPreparer().prepare(request);
+            assertEquals("GET", prepared.method());
+            assertEquals("https", prepared.uri().getScheme());
+            assertEquals("api.github.com", prepared.uri().getHost());
+            assertEquals(dev.jocote.model.AuthConfig.Type.NONE, request.auth().type());
+            assertTrue(prepared.headers().stream().noneMatch(h -> h.key().equalsIgnoreCase("Authorization")));
+        }
+        service.renameCollection(demo.id(), "Demo personalizada");
+        assertEquals("Demo personalizada", service.addGitHubDemo().name());
+
+        var reloaded = new WorkspaceService(repository);
+        assertEquals("Demo personalizada", reloaded.addGitHubDemo().name());
+        assertEquals(2, reloaded.workspace().collections().size());
+        assertEquals(List.of(personal), reloaded.workspace().collections().getFirst().requests());
+        assertEquals(demo.requests(), reloaded.workspace().collections().getLast().requests());
+    }
 }

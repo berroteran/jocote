@@ -31,6 +31,34 @@ java -jar target/jocote-0.1.0-SNAPSHOT.jar
 
 ## Funciones
 
+### Probar una API pública en un clic
+
+1. Abre Jocote y pulsa **Probar GitHub** en el panel izquierdo.
+2. Se guarda la colección **Demo GitHub** y se ejecuta `GET https://api.github.com/repos/berroteran/jocote`.
+3. En **Respuesta** verás el estado HTTP, tiempo, tamaño y JSON real devuelto por GitHub; a la derecha aparece el cURL equivalente.
+4. Abre con doble clic las otras peticiones de la colección y pulsa **Enviar**.
+
+| Petición | Qué demuestra |
+| --- | --- |
+| Repositorio Jocote | Consulta de un recurso público y lectura de su JSON. |
+| Perfil de berroteran | Consulta de un usuario público. |
+| Repositorios públicos | Parámetros `per_page=5` y `sort=updated`; respuesta como lista. |
+| Lenguajes de Jocote | Respuesta JSON pequeña con los lenguajes del repositorio. |
+
+Las cuatro peticiones son GET y no requieren token. GitHub aplica límites a las peticiones sin autenticación; cualquier error o límite se muestra en la respuesta. Los endpoints públicos están documentados en [GitHub REST API](https://docs.github.com/en/rest/repos/repos#get-a-repository).
+
+La colección está incluida en [demo-github.json](src/main/resources/dev/jocote/demo-github.json). Se agrega una sola vez y no reemplaza las colecciones existentes. Pulsar de nuevo el botón reutiliza la colección guardada, incluidas tus ediciones. No se realizan peticiones a GitHub al abrir normalmente la aplicación.
+
+Para iniciar y ejecutar directamente la demo:
+
+```sh
+mvn javafx:run "-Djavafx.args=--demo"
+```
+
+También puedes usar `Jocote.bat --demo` en Windows o `sh jocote.sh --demo` en macOS/Linux, después de recompilar con `mvn package`.
+
+### Cliente REST
+
 - Panel izquierdo de colecciones, colapsable y redimensionable: crear, renombrar, eliminar, buscar y duplicar peticiones.
 - Pestañas independientes para peticiones GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS y TRACE.
 - Parámetros de query y encabezados editables, con activación por fila y valores repetidos.
@@ -109,6 +137,14 @@ xvfb-run -a mvn -Djocote.uiTest=true -Dtest=JavaFxSmokeTest test
 ```
 
 Esta prueba abre JavaFX, verifica controles, ejecuta una petición contra un servidor local y guarda una captura en `target/jocote-preview.png`. Los tests se ejecutan en classpath; producción se ejecuta como módulo con Maven o el runtime generado.
+
+Para verificar además las cuatro peticiones reales de la demo desde JavaFX (requiere internet y consume cuatro peticiones públicas a GitHub):
+
+```sh
+mvn "-Djocote.uiTest=true" "-Djocote.githubTest=true" "-Dtest=JavaFxSmokeTest" test
+```
+
+Esta verificación exige `200 OK` y el contenido esperado en cada respuesta, y genera `target/jocote-github-demo.png` y `target/github-demo-results.txt`. Es optativa: la suite normal y CI no dependen de GitHub.
 
 ## Distribución por plataforma
 

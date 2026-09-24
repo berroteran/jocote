@@ -1,0 +1,141 @@
+{
+  "id": "jocote-demo-github",
+  "name": "Demo GitHub",
+  "requests": [
+    {
+      "id": "jocote-demo-github-repository",
+      "name": "1. Repositorio Jocote",
+      "method": "GET",
+      "url": "https://api.github.com/repos/berroteran/jocote",
+      "parameters": [],
+      "headers": [
+        {
+          "enabled": true,
+          "key": "Accept",
+          "value": "application/vnd.github+json"
+        },
+        {
+          "enabled": true,
+          "key": "User-Agent",
+          "value": "Jocote-Demo"
+        },
+        {
+          "enabled": true,
+          "key": "X-GitHub-Api-Version",
+          "value": "2026-03-10"
+        }
+      ],
+      "auth": {
+        "type": "NONE"
+      },
+      "bodyType": "NONE",
+      "body": "",
+      "formFields": [],
+      "timeoutSeconds": 30
+    },
+    {
+      "id": "jocote-demo-github-profile",
+      "name": "2. Perfil de berroteran",
+      "method": "GET",
+      "url": "https://api.github.com/users/berroteran",
+      "parameters": [],
+      "headers": [
+        {
+          "enabled": true,
+          "key": "Accept",
+          "value": "application/vnd.github+json"
+        },
+        {
+          "enabled": true,
+          "key": "User-Agent",
+          "value": "Jocote-Demo"
+        },
+        {
+          "enabled": true,
+          "key": "X-GitHub-Api-Version",
+          "value": "2026-03-10"
+        }
+      ],
+      "auth": {
+        "type": "NONE"
+      },
+      "bodyType": "NONE",
+      "body": "",
+      "formFields": [],
+      "timeoutSeconds": 30
+    },
+    {
+      "id": "jocote-demo-github-repositories",
+      "name": "3. Repositorios públicos",
+      "method": "GET",
+      "url": "https://api.github.com/users/berroteran/repos",
+      "parameters": [
+        {
+          "enabled": true,
+          "key": "per_page",
+          "value": "5"
+        },
+        {
+          "enabled": true,
+          "key": "sort",
+          "value": "updated"
+        }
+      ],
+      "headers": [
+        {
+          "enabled": true,
+          "key": "Accept",
+          "value": "application/vnd.github+json"
+        },
+        {
+          "enabled": true,
+          "key": "User-Agent",
+          "value": "Jocote-Demo"
+        },
+        {
+          "enabled": true,
+          "key": "X-GitHub-Api-Version",
+          "value": "2026-03-10"
+        }
+      ],
+      "auth": {
+        "type": "NONE"
+      },
+      "bodyType": "NONE",
+      "body": "",
+      "formFields": [],
+      "timeoutSeconds": 30
+    },
+    {
+      "id": "jocote-demo-github-languages",
+      "name": "4. Lenguajes de Jocote",
+      "method": "GET",
+      "url": "https://api.github.com/repos/berroteran/jocote/languages",
+      "parameters": [],
+      "headers": [
+        {
+          "enabled": true,
+          "key": "Accept",
+          "value": "application/vnd.github+json"
+        },
+        {
+          "enabled": true,
+          "key": "User-Agent",
+          "value": "Jocote-Demo"
+        },
+        {
+          "enabled": true,
+          "key": "X-GitHub-Api-Version",
+          "value": "2026-03-10"
+        }
+      ],
+      "auth": {
+        "type": "NONE"
+      },
+      "bodyType": "NONE",
+      "body": "",
+      "formFields": [],
+      "timeoutSeconds": 30
+    }
+  ]
+}

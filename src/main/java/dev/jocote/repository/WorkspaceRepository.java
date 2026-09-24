@@ -2,6 +2,7 @@ package dev.jocote.repository;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.jocote.model.RequestCollection;
 import dev.jocote.model.Workspace;
 
 import java.io.IOException;
@@ -18,6 +19,16 @@ public final class WorkspaceRepository {
 
     public WorkspaceRepository(Path file) { this.file = file.toAbsolutePath(); }
     public Path path() { return file; }
+
+    public RequestCollection loadGitHubDemo() throws IOException {
+        try (var input = WorkspaceRepository.class.getResourceAsStream("/dev/jocote/demo-github.json")) {
+            if (input == null) throw new IOException("No se encontró la colección Demo GitHub incluida en Jocote.");
+            var collection = mapper.readValue(input, RequestCollection.class);
+            validate(new Workspace(1, java.util.List.of(collection)));
+            if (collection.requests().isEmpty()) throw new IOException("La colección Demo GitHub no contiene peticiones.");
+            return collection;
+        }
+    }
 
     public Workspace load() throws IOException {
         if (!Files.exists(file)) return Workspace.empty();

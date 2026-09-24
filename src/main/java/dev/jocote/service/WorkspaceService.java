@@ -21,6 +21,16 @@ public final class WorkspaceService {
     public Workspace workspace() { return workspace; }
     public String storagePath() { return repository.path().toString(); }
 
+    public RequestCollection addGitHubDemo() throws IOException {
+        var demo = repository.loadGitHubDemo();
+        var existing = workspace.collections().stream().filter(c -> c.id().equals(demo.id())).findFirst();
+        if (existing.isPresent()) return existing.get();
+        var collections = new ArrayList<>(workspace.collections());
+        collections.add(demo);
+        commit(new Workspace(1, collections));
+        return demo;
+    }
+
     public void addCollection(String name) throws IOException {
         var collections = new ArrayList<>(workspace.collections());
         collections.add(new RequestCollection(null, name, java.util.List.of()));
