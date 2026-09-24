@@ -1,0 +1,35 @@
+name: Build Jocote
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Build and test
+        run: mvn -B -ntp clean verify
+      - name: Verify JavaFX on Linux
+        if: runner.os == 'Linux'
+        run: xvfb-run -a mvn -B -ntp -Djocote.uiTest=true -Dtest=JavaFxSmokeTest test
+      - name: Verify JavaFX on Windows and macOS
+        if: runner.os != 'Linux'
+        run: mvn -B -ntp "-Djocote.uiTest=true" "-Dtest=JavaFxSmokeTest" test
+      - name: Build runtime for this platform
+        run: mvn -B -ntp javafx:jlink
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jocote-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            target/jocote-runtime.zip
+            target/jocote-preview.png
