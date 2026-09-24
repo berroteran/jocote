@@ -85,9 +85,19 @@ public final class MainView extends BorderPane {
         var brand = new HBox(10, mark, title, subtitle); brand.setAlignment(Pos.CENTER_LEFT);
         Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
         var add = UiSupport.button("+ Nueva petición", "Abrir una pestaña · Ctrl/⌘ + N", () -> open(RequestDefinition.blank(), selectedCollectionId()));
-        var bar = new HBox(12, brand, spacer, showCollections, showCurl, add);
+        var importCurl = UiSupport.button("Importar cURL", "Pegar un comando cURL como una petición editable", this::importCurl);
+        importCurl.setId("import-curl");
+        var bar = new HBox(12, brand, spacer, showCollections, showCurl, importCurl, add);
         bar.setAlignment(Pos.CENTER_LEFT); bar.setPadding(new Insets(16, 20, 16, 20)); bar.getStyleClass().add("app-header");
         return bar;
+    }
+
+    private void importCurl() {
+        new CurlImportDialog(window(), preparer).showAndWait().ifPresent(result -> {
+            open(result.request(), selectedCollectionId());
+            active().markDirty();
+            footer.setText("cURL importado · Revisa la petición y pulsa Enviar o Guardar. " + String.join(" ", result.notices()));
+        });
     }
 
     private VBox createCollections() {

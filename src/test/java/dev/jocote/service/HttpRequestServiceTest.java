@@ -68,6 +68,18 @@ class HttpRequestServiceTest {
         assertEquals(302, service.send(get("/redirect", 5)).get(6, TimeUnit.SECONDS).statusCode());
     }
 
+    @Test void executesImportedCurlAgainstLocalServer() throws Exception {
+        var preparer = new RequestPreparer();
+        var imported = new CurlImporter(preparer).parse("curl '" + get("/echo", 5).uri()
+                + "' -XPATCH -H 'Authorization: Bearer example-token' --json '{\"saludo\":\"¡Hola!\"}' --max-time 5",
+                CurlGenerator.Shell.BASH);
+        var response = service.send(preparer.prepare(imported.request())).get(6, TimeUnit.SECONDS);
+        assertEquals(201, response.statusCode());
+        assertEquals("{\"saludo\":\"¡Hola!\"}", response.text());
+        assertEquals("PATCH", response.headers().get("x-method").getFirst());
+        assertEquals("Bearer example-token", response.headers().get("x-auth").getFirst());
+    }
+
     @Test void requestTimesOutWithoutBlockingCaller() {
         var future = service.send(get("/slow", 1));
         assertFalse(future.isDone());
