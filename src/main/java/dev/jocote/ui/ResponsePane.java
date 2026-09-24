@@ -38,6 +38,7 @@ final class ResponsePane extends VBox {
     private ResponseData response;
 
     ResponsePane() {
+        body.setId("response-body");
         setMinHeight(170); setSpacing(8); setPadding(new Insets(12));
         var heading = new Label("RESPUESTA"); heading.getStyleClass().add("section-label");
         status.getStyleClass().add("status-badge");

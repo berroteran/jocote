@@ -1,6 +1,7 @@
 package dev.jocote.ui;
 
 import com.sun.net.httpserver.HttpServer;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.jocote.model.AuthConfig;
 import dev.jocote.model.KeyValue;
 import dev.jocote.model.RequestDefinition;
@@ -90,10 +91,72 @@ class JavaFxSmokeTest {
                 try { Files.createDirectories(Path.of("target")); ImageIO.write(buffered, "png", Path.of("target/jocote-preview.png").toFile()); }
                 catch (java.io.IOException e) { throw new java.io.UncheckedIOException(e); }
             });
+            if (Boolean.getBoolean("jocote.githubTest")) verifyGitHubDemo(view[0], service);
         } finally {
             onFx(() -> { if (view[0] != null) view[0].dispose(); if (stage[0] != null) stage[0].close(); });
             http.close(); server.stop(0); Platform.exit();
         }
+    }
+
+    private static void verifyGitHubDemo(MainView view, WorkspaceService service) throws Exception {
+        onFx(() -> ((Button) view.lookup("#github-demo")).fire());
+        var demo = service.workspace().collections().stream().filter(c -> c.id().equals("jocote-demo-github")).findFirst().orElseThrow();
+        var mapper = new ObjectMapper();
+        var report = new StringBuilder();
+        for (int index = 0; index < demo.requests().size(); index++) {
+            var request = demo.requests().get(index);
+            if (index > 0) onFx(() -> {
+                view.open(request, demo.id());
+                view.applyCss(); view.layout();
+                var tabs = (TabPane) view.lookup("#request-tabs");
+                ((Button) tabs.getSelectionModel().getSelectedItem().getContent().lookup("#send-request")).fire();
+            });
+            boolean[] finished = {false};
+            String[] status = {""};
+            String[] body = {""};
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(35);
+            while (!finished[0] && System.nanoTime() < deadline) {
+                onFx(() -> {
+                    view.applyCss(); view.layout();
+                    var tabs = (TabPane) view.lookup("#request-tabs");
+                    var editor = tabs.getSelectionModel().getSelectedItem().getContent();
+                    finished[0] = !((Button) editor.lookup("#send-request")).isDisabled();
+                    if (finished[0]) {
+                        status[0] = ((Label) editor.lookup(".status-badge")).getText();
+                        var response = (TextArea) editor.lookup("#response-body");
+                        body[0] = response == null ? "" : response.getText();
+                    }
+                });
+                if (!finished[0]) Thread.sleep(50);
+            }
+            assertTrue(finished[0], "GitHub request timed out: " + request.url());
+            assertEquals("200 OK", status[0], () -> request.url() + "\n" + body[0]);
+            var json = mapper.readTree(body[0]);
+            switch (index) {
+                case 0 -> assertEquals("berroteran/jocote", json.path("full_name").asText());
+                case 1 -> assertEquals("berroteran", json.path("login").asText());
+                case 2 -> {
+                    assertTrue(json.isArray() && !json.isEmpty() && json.size() <= 5);
+                    json.forEach(repo -> assertEquals("berroteran", repo.path("owner").path("login").asText()));
+                }
+                case 3 -> assertTrue(json.has("Java"));
+                default -> fail("Unexpected demo request");
+            }
+            String result = request.method() + " " + request.url() + " -> " + status[0] + " (contenido verificado)";
+            report.append(result).append(System.lineSeparator());
+            System.out.println(result);
+            if (index == 0) {
+                Files.writeString(Path.of("target/github-demo-response.json"), body[0], StandardCharsets.UTF_8);
+                onFx(() -> {
+                    WritableImage image = view.snapshot(null, null);
+                    var buffered = new BufferedImage((int) image.getWidth(), (int) image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+                    for (int y = 0; y < buffered.getHeight(); y++) for (int x = 0; x < buffered.getWidth(); x++) buffered.setRGB(x, y, image.getPixelReader().getArgb(x, y));
+                    try { ImageIO.write(buffered, "png", Path.of("target/jocote-github-demo.png").toFile()); }
+                    catch (java.io.IOException e) { throw new java.io.UncheckedIOException(e); }
+                });
+            }
+        }
+        Files.writeString(Path.of("target/github-demo-results.txt"), report, StandardCharsets.UTF_8);
     }
 
     private static void onFx(Runnable task) throws Exception {

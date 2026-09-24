@@ -31,6 +31,7 @@ public final class JocoteApplication extends Application {
             stage.setTitle("Jocote · REST Client"); stage.setMinWidth(1060); stage.setMinHeight(700); stage.setScene(scene);
             stage.setOnCloseRequest(event -> { if (!view.requestClose()) event.consume(); });
             stage.show();
+            if (getParameters().getRaw().contains("--demo")) view.runGitHubDemo();
             LOG.info("Jocote iniciado");
         } catch (IOException | RuntimeException e) {
             LOG.severe("No se pudo iniciar Jocote: " + e.getClass().getSimpleName());

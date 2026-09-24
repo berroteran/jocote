@@ -116,7 +116,10 @@ public final class MainView extends BorderPane {
         tree.setOnMouseClicked(event -> { if (event.getClickCount() == 2) openSelected(); });
         tree.setOnKeyPressed(event -> { if (event.getCode() == KeyCode.ENTER) openSelected(); });
         var caption = new Label("Doble clic para abrir.\nClic derecho para organizar."); caption.getStyleClass().add("muted"); caption.setWrapText(true);
-        var box = new VBox(14, heading, filter, tree, caption); box.setPadding(new Insets(18, 12, 18, 12));
+        var demo = UiSupport.button("Probar GitHub", "Cargar la colección de ejemplo y ejecutar su primera petición pública", this::runGitHubDemo);
+        demo.setId("github-demo");
+        demo.setMaxWidth(Double.MAX_VALUE);
+        var box = new VBox(14, heading, filter, demo, tree, caption); box.setPadding(new Insets(18, 12, 18, 12));
         box.setMinWidth(175); box.setPrefWidth(230); box.getStyleClass().add("collections-pane"); VBox.setVgrow(tree, Priority.ALWAYS);
         return box;
     }
@@ -173,6 +176,27 @@ public final class MainView extends BorderPane {
     private void openSelected() {
         var item = tree.getSelectionModel().getSelectedItem();
         if (item != null && item.getValue().request() != null) open(item.getValue().request(), item.getValue().collection().id());
+    }
+
+    public void runGitHubDemo() {
+        try {
+            var demo = workspace.addGitHubDemo();
+            filter.clear();
+            rebuildTree();
+            if (!showCollections.isSelected()) {
+                showCollections.setSelected(true);
+                updatePanels();
+            }
+            if (demo.requests().isEmpty()) {
+                footer.setText("Demo GitHub está vacía. Elimina esa colección y pulsa Probar GitHub para restaurarla.");
+                return;
+            }
+            open(demo.requests().getFirst(), demo.id());
+            footer.setText("Demo GitHub · Abre otra petición con doble clic y pulsa Enviar.");
+            active().send();
+        } catch (IOException e) {
+            UiSupport.error(window(), "No se pudo cargar la colección de demostración", e.getMessage());
+        }
     }
 
     private String selectedCollectionId() {
