@@ -2,6 +2,10 @@
 
 Cliente REST de escritorio en **Java 21 y JavaFX**, con un único código fuente para **Windows, macOS y Linux**. Esta primera versión implementa el flujo esencial de trabajo solicitado, inspirado en Postman.
 
+![Jocote con colecciones, editor de petición GET, respuesta JSON y comando cURL](docs/images/jocote-screenshot.png)
+
+*Captura de Jocote en Windows con tema claro: petición a un servidor local de pruebas, respuesta HTTP 200 y su comando cURL.*
+
 ## Ejecutar
 
 **Recomendado para desarrollar: JDK 21, Maven 3.9.x y ejecución mediante Maven desde la carpeta que contiene pom.xml.** Se necesita una sesión gráfica para abrir la ventana y conexión a internet para la primera descarga de dependencias.
@@ -388,6 +392,12 @@ La imagen es portable; esta versión no genera instaladores MSI/DMG/DEB, firma d
 ## Alcance de esta versión
 
 No es una réplica completa de Postman. Quedan fuera de esta primera entrega: importación/exportación Postman/OpenAPI, entornos y variables, historial, scripts y tests de colecciones, OAuth interactivo, multipart/archivos como body, WebSocket/gRPC, clientes TLS personalizados y colaboración/sincronización en nube.
+
+## Autor
+
+**Omar Berroterán Silva**
+
+GitHub: [@berroteran](https://github.com/berroteran)
 
 ## Referencias
 
