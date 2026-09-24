@@ -19,6 +19,7 @@ final class CurlImportDialog extends Dialog<CurlImporter.Result> {
 
     CurlImportDialog(Window owner, RequestPreparer preparer) {
         initOwner(owner);
+        ThemeManager.styleDialog(this);
         setTitle("Importar cURL");
         setHeaderText("Pega un comando para abrir una petición editable");
         setResizable(true);
@@ -44,6 +45,7 @@ final class CurlImportDialog extends Dialog<CurlImporter.Result> {
         error.getStyleClass().add("validation-error");
         var content = new VBox(12, new Label("Sintaxis del comando"), shell, command, note, error);
         content.setPadding(new Insets(12));
+        content.getStyleClass().add("settings-content");
         getDialogPane().setContent(content);
         getDialogPane().setPrefWidth(720);
         var importButton = new ButtonType("Importar", ButtonBar.ButtonData.OK_DONE);

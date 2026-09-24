@@ -40,16 +40,20 @@ final class ResponsePane extends VBox {
     ResponsePane() {
         body.setId("response-body");
         setMinHeight(170); setSpacing(8); setPadding(new Insets(12));
+        getStyleClass().add("response-pane");
         var heading = new Label("RESPUESTA"); heading.getStyleClass().add("section-label");
         status.getStyleClass().add("status-badge");
         timing.getStyleClass().add("muted");
         Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
         var top = new HBox(12, heading, spacer, status, timing); top.setAlignment(Pos.CENTER_LEFT);
+        top.getStyleClass().add("control-row");
         pretty.setSelected(true); pretty.setOnAction(event -> renderBody());
         save = UiSupport.button("Guardar respuesta", "Guardar los bytes originales de la respuesta", this::saveResponse);
         copy = UiSupport.button("Copiar", "Copiar el contenido mostrado", () -> UiSupport.copy(body.getText()));
         save.setDisable(true); copy.setDisable(true);
-        VBox bodyBox = new VBox(8, new HBox(12, pretty, copy, save), body); VBox.setVgrow(body, Priority.ALWAYS);
+        var actions = new HBox(12, pretty, copy, save); actions.getStyleClass().add("control-row");
+        VBox bodyBox = new VBox(8, actions, body); VBox.setVgrow(body, Priority.ALWAYS);
+        bodyBox.getStyleClass().add("content-stack");
         tabs.getTabs().addAll(new Tab("Body", bodyBox), new Tab("Encabezados", headers));
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         showEmpty("Tu próxima respuesta empieza aquí", "Configura una URL y pulsa Enviar · Ctrl/⌘ + Enter");

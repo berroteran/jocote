@@ -58,12 +58,14 @@ public final class RequestEditor extends VBox {
         send = UiSupport.button("Enviar", "Ejecutar petición · Ctrl/⌘ + Enter", this::send); send.setId("send-request"); send.getStyleClass().add("primary-button");
         cancel = UiSupport.button("Cancelar", "Cancelar la petición en curso", this::cancel); cancel.setDisable(true);
         var requestBar = new HBox(8, method, url, send, cancel); requestBar.setAlignment(Pos.CENTER_LEFT);
+        requestBar.getStyleClass().add("control-row");
         timeout.getValueFactory().setValue(Math.clamp(request.timeoutSeconds(), 1, 600)); timeout.setPrefWidth(85);
         var timeoutLabel = new Label("Timeout (s)"); timeoutLabel.getStyleClass().add("muted");
         var save = UiSupport.button("Guardar", "Guardar en colección · Ctrl/⌘ + S", onSave);
         var hint = new Label("PETICIÓN REST"); hint.getStyleClass().add("section-label");
         var spacer = new javafx.scene.layout.Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
         var options = new HBox(10, hint, spacer, timeoutLabel, timeout, save); options.setAlignment(Pos.CENTER_LEFT);
+        options.getStyleClass().add("control-row");
         parameters = new KeyValueEditor("Se agregan a los parámetros existentes en la URL", request.parameters(), this::changed);
         headers = new KeyValueEditor("Desmarca una fila para omitirla del envío", request.headers(), this::changed);
         auth = new AuthEditor(request.auth(), this::changed);

@@ -62,7 +62,8 @@ final class KeyValueEditor extends VBox {
         remove.disableProperty().bind(table.getSelectionModel().selectedItemProperty().isNull());
         var help = new Label(hint + " · Doble clic para editar; Enter para confirmar.");
         help.getStyleClass().add("muted"); help.setWrapText(true);
-        getChildren().addAll(new HBox(8, add, remove), table, help);
+        var actions = new HBox(8, add, remove); actions.getStyleClass().add("control-row");
+        getChildren().addAll(actions, table, help);
         VBox.setVgrow(table, Priority.ALWAYS);
     }
 

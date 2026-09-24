@@ -1,0 +1,51 @@
+/* Geometry only. Loaded after the theme; Normal uses Jocote's standard spacing.
+   Font sizes, split positions, minimum editor sizes and colors stay independent. */
+.density-normal .table-view .column-header { -fx-size: 33; }
+.density-normal .table-row-cell { -fx-cell-size: 33; }
+.density-normal .table-cell { -fx-padding: 7 9; }
+.density-compact .app-header { -fx-padding: 8 12; -fx-spacing: 6; }
+.density-compact .collections-pane, .density-compact .curl-pane { -fx-padding: 8; -fx-spacing: 8; }
+.density-compact .request-editor { -fx-padding: 8 8 0 8; -fx-spacing: 6; }
+.density-compact .response-pane, .density-compact .editor-pane,
+.density-compact .auth-editor, .density-compact .body-editor,
+.density-compact .settings-content { -fx-padding: 6; -fx-spacing: 6; }
+.density-compact .control-row, .density-compact .content-stack { -fx-spacing: 4; }
+.density-compact .settings-grid { -fx-hgap: 8; -fx-vgap: 6; }
+.density-compact .button, .density-compact .toggle-button { -fx-padding: 4 8; }
+.density-compact .button.primary-button { -fx-padding: 6 12; }
+.density-compact .text-field, .density-compact .password-field,
+.density-compact .combo-box { -fx-padding: 4; }
+.density-compact .url-field { -fx-padding: 6; }
+.density-compact .tab { -fx-padding: 5 8; }
+.density-compact .tree-cell { -fx-padding: 5 3; }
+.density-compact .table-view .column-header { -fx-size: 27; }
+.density-compact .table-row-cell { -fx-cell-size: 27; }
+.density-compact .table-cell { -fx-padding: 3 6; }
+.density-compact .code-area .content { -fx-padding: 8; }
+.density-compact .footer { -fx-padding: 5 12; }
+.density-compact .button.theme-button { -fx-padding: 4 8; -fx-min-width: 32; -fx-min-height: 32; }
+.density-compact .profile-button { -fx-padding: 2 4; }
+.density-compact .profile-avatar { -fx-min-width: 28; -fx-pref-width: 28; -fx-max-width: 28; -fx-min-height: 28; -fx-pref-height: 28; -fx-max-height: 28; }
+
+.density-comfortable .app-header { -fx-padding: 20 24; -fx-spacing: 12; }
+.density-comfortable .collections-pane, .density-comfortable .curl-pane { -fx-padding: 20 16; -fx-spacing: 18; }
+.density-comfortable .request-editor { -fx-padding: 20 18 0 18; -fx-spacing: 16; }
+.density-comfortable .response-pane, .density-comfortable .editor-pane,
+.density-comfortable .auth-editor, .density-comfortable .body-editor,
+.density-comfortable .settings-content { -fx-padding: 18; -fx-spacing: 16; }
+.density-comfortable .control-row, .density-comfortable .content-stack { -fx-spacing: 12; }
+.density-comfortable .settings-grid { -fx-hgap: 18; -fx-vgap: 16; }
+.density-comfortable .button, .density-comfortable .toggle-button { -fx-padding: 11 16; }
+.density-comfortable .button.primary-button { -fx-padding: 14 24; }
+.density-comfortable .text-field, .density-comfortable .password-field,
+.density-comfortable .combo-box { -fx-padding: 9; }
+.density-comfortable .url-field { -fx-padding: 14; }
+.density-comfortable .tab { -fx-padding: 13 16; }
+.density-comfortable .tree-cell { -fx-padding: 14 6; }
+.density-comfortable .table-view .column-header { -fx-size: 42; }
+.density-comfortable .table-row-cell { -fx-cell-size: 42; }
+.density-comfortable .table-cell { -fx-padding: 10 12; }
+.density-comfortable .code-area .content { -fx-padding: 20; }
+.density-comfortable .footer { -fx-padding: 12 24; }
+.density-comfortable .button.theme-button { -fx-padding: 6 12; -fx-min-width: 44; -fx-min-height: 44; }
+.density-comfortable .profile-button { -fx-padding: 6 8; }

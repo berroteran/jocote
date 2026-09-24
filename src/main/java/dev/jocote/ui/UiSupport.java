@@ -35,6 +35,7 @@ final class UiSupport {
     static void error(Window owner, String title, String message) {
         var alert = new Alert(Alert.AlertType.ERROR);
         alert.initOwner(owner);
+        ThemeManager.styleDialog(alert);
         alert.setTitle("Jocote");
         alert.setHeaderText(title);
         alert.setContentText(message == null ? "Error inesperado." : message);

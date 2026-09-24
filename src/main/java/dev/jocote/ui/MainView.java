@@ -2,19 +2,31 @@ package dev.jocote.ui;
 
 import dev.jocote.model.RequestCollection;
 import dev.jocote.model.RequestDefinition;
+import dev.jocote.model.AppTheme;
+import dev.jocote.model.LayoutDensity;
+import dev.jocote.model.UserPreferences;
+import dev.jocote.service.PreferencesService;
 import dev.jocote.service.HttpRequestService;
 import dev.jocote.service.RequestPreparer;
 import dev.jocote.service.WorkspaceService;
 import javafx.geometry.Insets;
+import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.RadioMenuItem;
+import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -33,6 +45,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.Group;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.SVGPath;
 import javafx.stage.Window;
 import javafx.util.StringConverter;
 
@@ -40,10 +55,19 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 public final class MainView extends BorderPane {
     private final WorkspaceService workspace;
     private final HttpRequestService http;
+    private final PreferencesService preferences;
+    private Button cycleTheme;
+    private MenuButton profile;
+    private final Label avatar = new Label();
+    private final MenuItem profileSummary = new MenuItem();
+    private final Menu appearance = new Menu("Apariencia");
+    private final Menu densityMenu = new Menu("Densidad visual");
+    private boolean disposed;
     private final RequestPreparer preparer = new RequestPreparer();
     private final TabPane requests = new TabPane();
     private final SplitPane layout = new SplitPane();
@@ -55,8 +79,8 @@ public final class MainView extends BorderPane {
     private final ToggleButton showCollections = new ToggleButton("Colecciones");
     private final ToggleButton showCurl = new ToggleButton("cURL");
 
-    public MainView(WorkspaceService workspace, HttpRequestService http) {
-        this.workspace = workspace; this.http = http;
+    public MainView(WorkspaceService workspace, HttpRequestService http, PreferencesService preferences) {
+        this.workspace = workspace; this.http = http; this.preferences = preferences;
         collections = createCollections();
         requests.setId("request-tabs"); requests.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
         requests.setMinWidth(420);
@@ -65,11 +89,13 @@ public final class MainView extends BorderPane {
         showCollections.setSelected(true); showCurl.setSelected(true);
         showCollections.setOnAction(event -> updatePanels()); showCurl.setOnAction(event -> updatePanels());
         setCenter(layout); updatePanels();
-        footer.getStyleClass().add("footer"); footer.setMaxWidth(Double.MAX_VALUE); setBottom(footer);
+        footer.getStyleClass().add("footer"); footer.setMaxWidth(Double.MAX_VALUE); footer.setWrapText(true); setBottom(footer);
+        if (!preferences.loadWarning().isEmpty()) footer.setText(preferences.loadWarning());
         rebuildTree();
         open(RequestDefinition.blank(), null);
         sceneProperty().addListener((obs, old, scene) -> {
             if (scene != null) {
+                ThemeManager.apply(scene, preferences.current().theme(), preferences.current().density());
                 scene.getAccelerators().put(new KeyCodeCombination(KeyCode.ENTER, KeyCombination.SHORTCUT_DOWN), () -> { if (active() != null) active().send(); });
                 scene.getAccelerators().put(new KeyCodeCombination(KeyCode.S, KeyCombination.SHORTCUT_DOWN), () -> { if (active() != null) save(active()); });
                 scene.getAccelerators().put(new KeyCodeCombination(KeyCode.N, KeyCombination.SHORTCUT_DOWN), () -> open(RequestDefinition.blank(), selectedCollectionId()));
@@ -85,11 +111,77 @@ public final class MainView extends BorderPane {
         var brand = new HBox(10, mark, title, subtitle); brand.setAlignment(Pos.CENTER_LEFT);
         Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
         var add = UiSupport.button("+ Nueva petición", "Abrir una pestaña · Ctrl/⌘ + N", () -> open(RequestDefinition.blank(), selectedCollectionId()));
+        add.setId("new-request");
         var importCurl = UiSupport.button("Importar cURL", "Pegar un comando cURL como una petición editable", this::importCurl);
         importCurl.setId("import-curl");
-        var bar = new HBox(12, brand, spacer, showCollections, showCurl, importCurl, add);
+        cycleTheme = UiSupport.button("", "Cambiar tema", () -> changeTheme(preferences.current().theme().next()));
+        cycleTheme.setId("cycle-theme"); cycleTheme.getStyleClass().add("theme-button");
+        var outline = new Circle(8, 8, 7); outline.getStyleClass().add("theme-icon-outline");
+        var half = new SVGPath(); half.setContent("M 8 1 A 7 7 0 0 0 8 15 Z"); half.getStyleClass().add("theme-icon-half");
+        cycleTheme.setGraphic(new Group(outline, half));
+        profile = createProfileMenu();
+        refreshProfile();
+        var bar = new HBox(10, brand, spacer, showCollections, showCurl, importCurl, add, cycleTheme, profile);
         bar.setAlignment(Pos.CENTER_LEFT); bar.setPadding(new Insets(16, 20, 16, 20)); bar.getStyleClass().add("app-header");
         return bar;
+    }
+
+    private MenuButton createProfileMenu() {
+        avatar.getStyleClass().add("profile-avatar"); avatar.setId("profile-avatar");
+        var button = new MenuButton(); button.setGraphic(avatar); button.setId("profile-menu");
+        button.getStyleClass().add("profile-button"); button.setMinWidth(Region.USE_PREF_SIZE);
+        profileSummary.setDisable(true);
+        var edit = new MenuItem("Mi perfil…"); edit.setId("edit-profile");
+        edit.setOnAction(event -> new ProfileDialog(window(), preferences.current()).showAndWait().ifPresent(value ->
+                savePreferences(preferences.setProfile(value.displayName(), value.alias(), value.email()), "Perfil guardado en este equipo.")));
+        var group = new ToggleGroup();
+        for (AppTheme theme : AppTheme.values()) {
+            var item = new RadioMenuItem(ThemeManager.label(theme)); item.setUserData(theme); item.setToggleGroup(group);
+            item.setOnAction(event -> changeTheme(theme)); appearance.getItems().add(item);
+        }
+        densityMenu.setId("density-menu");
+        var densities = new ToggleGroup();
+        for (LayoutDensity density : LayoutDensity.values()) {
+            var item = new RadioMenuItem(ThemeManager.label(density)); item.setUserData(density); item.setToggleGroup(densities);
+            item.setOnAction(event -> {
+                if (density != preferences.current().density()) savePreferences(preferences.setDensity(density), "Densidad visual: " + ThemeManager.label(density));
+            });
+            densityMenu.getItems().add(item);
+        }
+        button.getItems().addAll(profileSummary, new SeparatorMenuItem(), edit, densityMenu, appearance);
+        return button;
+    }
+
+    private void changeTheme(AppTheme theme) {
+        if (theme == preferences.current().theme()) return;
+        savePreferences(preferences.setTheme(theme), "Tema: " + ThemeManager.label(theme));
+    }
+
+    private void savePreferences(CompletableFuture<UserPreferences> save, String success) {
+        cycleTheme.setDisable(true); profile.setDisable(true);
+        save.whenComplete((value, error) -> Platform.runLater(() -> {
+            if (disposed) return;
+            cycleTheme.setDisable(false); profile.setDisable(false);
+            if (error == null) {
+                refreshProfile(); ThemeManager.apply(getScene(), value.theme(), value.density()); footer.setText(success);
+            } else {
+                refreshProfile(); footer.setText("No se guardaron los cambios de preferencias.");
+                UiSupport.error(window(), "No se pudieron guardar las preferencias", preferences.loadWarning().isEmpty()
+                        ? "Revisa los permisos y el espacio disponible. Se conserva la configuración anterior." : preferences.loadWarning());
+            }
+        }));
+    }
+
+    private void refreshProfile() {
+        var value = preferences.current();
+        avatar.setText(value.initials());
+        profileSummary.setText(value.displayName() + " · Perfil local");
+        profile.setAccessibleText("Perfil de " + value.displayName());
+        profile.setTooltip(new Tooltip(value.displayName() + " · Abrir menú de perfil"));
+        cycleTheme.setAccessibleText("Tema actual: " + ThemeManager.label(value.theme()) + ". Cambiar al siguiente tema");
+        cycleTheme.setTooltip(new Tooltip("Actual: " + ThemeManager.label(value.theme()) + " · Siguiente: " + ThemeManager.label(value.theme().next())));
+        appearance.getItems().forEach(item -> ((RadioMenuItem) item).setSelected(item.getUserData() == value.theme()));
+        densityMenu.getItems().forEach(item -> ((RadioMenuItem) item).setSelected(item.getUserData() == value.density()));
     }
 
     private void importCurl() {
@@ -250,7 +342,7 @@ public final class MainView extends BorderPane {
             addCollection();
             if (workspace.workspace().collections().isEmpty()) return false;
         }
-        var dialog = new Dialog<SaveTarget>(); dialog.initOwner(window()); dialog.setTitle("Guardar petición");
+        var dialog = new Dialog<SaveTarget>(); dialog.initOwner(window()); ThemeManager.styleDialog(dialog); dialog.setTitle("Guardar petición");
         var name = new TextField(editor.definition().name()); name.setPrefWidth(310);
         var collection = new ComboBox<RequestCollection>(); collection.getItems().setAll(workspace.workspace().collections());
         collection.setMaxWidth(Double.MAX_VALUE);
@@ -260,6 +352,7 @@ public final class MainView extends BorderPane {
         });
         collection.setValue(collection.getItems().stream().filter(c -> c.id().equals(editor.collectionId())).findFirst().orElse(collection.getItems().getFirst()));
         var grid = new GridPane(); grid.setHgap(12); grid.setVgap(14); grid.setPadding(new Insets(16));
+        grid.getStyleClass().add("settings-grid");
         grid.addRow(0, new Label("Nombre"), name); grid.addRow(1, new Label("Colección"), collection);
         var note = new Label("Se guarda localmente en texto plano, incluida la autorización."); note.setWrapText(true); note.getStyleClass().add("muted"); grid.add(note, 0, 2, 2, 1);
         dialog.getDialogPane().setContent(grid);
@@ -277,13 +370,13 @@ public final class MainView extends BorderPane {
     private void addCollection() { prompt("Nueva colección", "Mi colección").ifPresent(name -> mutate(() -> workspace.addCollection(name))); }
 
     private Optional<String> prompt(String title, String initial) {
-        var dialog = new TextInputDialog(initial); dialog.initOwner(window()); dialog.setTitle("Jocote"); dialog.setHeaderText(title); dialog.setContentText("Nombre:");
+        var dialog = new TextInputDialog(initial); dialog.initOwner(window()); ThemeManager.styleDialog(dialog); dialog.setTitle("Jocote"); dialog.setHeaderText(title); dialog.setContentText("Nombre:");
         return dialog.showAndWait().map(String::trim).filter(name -> !name.isBlank());
     }
 
     private boolean confirm(String message) {
         var dialog = new Alert(Alert.AlertType.CONFIRMATION, message, ButtonType.OK, ButtonType.CANCEL);
-        dialog.initOwner(window()); dialog.setTitle("Jocote"); dialog.setHeaderText("Confirmar eliminación");
+        dialog.initOwner(window()); ThemeManager.styleDialog(dialog); dialog.setTitle("Jocote"); dialog.setHeaderText("Confirmar eliminación");
         return dialog.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK;
     }
 
@@ -297,7 +390,7 @@ public final class MainView extends BorderPane {
         var save = new ButtonType("Guardar", ButtonBar.ButtonData.YES);
         var discard = new ButtonType("Descartar", ButtonBar.ButtonData.NO);
         var alert = new Alert(Alert.AlertType.CONFIRMATION, "Hay cambios sin guardar en «" + editor.definition().name() + "».", save, discard, ButtonType.CANCEL);
-        alert.initOwner(window()); alert.setTitle("Jocote"); alert.setHeaderText("Cambios sin guardar");
+        alert.initOwner(window()); ThemeManager.styleDialog(alert); alert.setTitle("Jocote"); alert.setHeaderText("Cambios sin guardar");
         var result = alert.showAndWait().orElse(ButtonType.CANCEL);
         return result == discard || result == save && save(editor);
     }
@@ -307,7 +400,7 @@ public final class MainView extends BorderPane {
         dispose(); return true;
     }
 
-    public void dispose() { requests.getTabs().forEach(tab -> ((RequestEditor) tab.getContent()).dispose()); }
+    public void dispose() { disposed = true; requests.getTabs().forEach(tab -> ((RequestEditor) tab.getContent()).dispose()); }
     private Window window() { return getScene() == null ? null : getScene().getWindow(); }
     private record Entry(RequestCollection collection, RequestDefinition request) { }
     private record SaveTarget(String name, String collectionId) { }

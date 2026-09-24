@@ -23,6 +23,7 @@ final class BodyEditor extends VBox {
 
     BodyEditor(RequestDefinition request, Runnable onChange) {
         setSpacing(10); setPadding(new Insets(12));
+        getStyleClass().add("body-editor");
         type.getItems().setAll(RequestDefinition.BodyType.values());
         type.setConverter(new StringConverter<>() {
             @Override public String toString(RequestDefinition.BodyType value) {
@@ -35,7 +36,8 @@ final class BodyEditor extends VBox {
         form = new KeyValueEditor("Los valores se codifican como formulario", request.formFields(), onChange);
         var format = UiSupport.button("Formatear JSON", "Aplicar formato al JSON", () -> body.setText(JsonFormatter.format(body.getText())));
         format.disableProperty().bind(type.valueProperty().isNotEqualTo(RequestDefinition.BodyType.JSON));
-        getChildren().addAll(new HBox(10, type, format), content);
+        var actions = new HBox(10, type, format); actions.getStyleClass().add("control-row");
+        getChildren().addAll(actions, content);
         VBox.setVgrow(content, Priority.ALWAYS);
         type.valueProperty().addListener((obs, old, value) -> { rebuild(); onChange.run(); });
         body.textProperty().addListener((obs, old, value) -> onChange.run());
