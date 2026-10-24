@@ -424,6 +424,10 @@ El resultado está en `target/jocote-runtime/` y `target/jocote-runtime.zip`. Ej
 
 La imagen es portable; esta versión no genera instaladores MSI/DMG/DEB, firma de código ni notarización. En macOS, la distribución externa requerirá considerar los requisitos de firma de Apple.
 
+## Tareas y evolución
+
+El [registro central de tareas y backlog](docs/FEATURE_BACKLOG.md) concentra features, pendientes y deuda técnica por dominio, con códigos estables, estado, prioridad, importancia, impacto, complejidad, dependencias y criterios de cierre. Distingue capacidades disponibles, entregas parciales y propuestas futuras, incluidos SSH, terminales, bloqueo e instaladores.
+
 ## Alcance de esta versión
 
 No es una réplica completa de Postman. Quedan fuera de esta primera entrega: importación/exportación Postman/OpenAPI, entornos y variables, historial, scripts y tests de colecciones, OAuth interactivo, multipart/archivos como body, WebSocket/gRPC, clientes TLS personalizados y colaboración/sincronización en nube.
